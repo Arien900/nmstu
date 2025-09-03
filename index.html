@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechStore - Магазин компьютерной техники</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        /* Общие стили */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f9f9f9;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        h1, h2, h3, h4 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        /* Шапка с анимированным логотипом */
+        header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            transition: all 0.5s ease;
+            animation: gradientShift 5s infinite alternate;
+        }
+        
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            100% {
+                background-position: 100% 50%;
+            }
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 20px;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        /* Конфигуратор ПК */
+        .pc-builder {
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .builder-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .components-selector {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .component-category {
+            margin-bottom: 15px;
+        }
+        
+        .component-category h3 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .component-dropdown {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+        
+        .build-summary {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .selected-components-list {
+            margin: 15px 0;
+        }
+        
+        .component-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .total-price {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 15px 0;
+            text-align: right;
+        }
+        
+        .compatibility-errors {
+            margin: 15px 0;
+            color: #d9534f;
+        }
+        
+        .error-message {
+            padding: 8px;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        
+        .save-build-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .save-build-btn:hover {
+            background: #0069d9;
+        }
+        
+        /* Карта магазинов */
+        .stores-map {
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .map-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .interactive-map {
+            flex: 2;
+            min-width: 300px;
+            height: 400px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .delivery-info {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .store-selector {
+            margin-bottom: 15px;
+        }
+        
+        .store-dropdown {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .delivery-options {
+            margin: 15px 0;
+        }
+        
+        .delivery-options .option {
+            margin-bottom: 10px;
+        }
+        
+        .delivery-details {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .delivery-zones ul {
+            margin: 10px 0 10px 20px;
+        }
+        
+        .address-input {
+            margin: 15px 0;
+        }
+        
+        .address-input input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .calculate-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        
+        .calculate-btn:hover {
+            background: #218838;
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            nav ul {
+                margin-top: 15px;
+                justify-content: center;
+            }
+            
+            nav ul li {
+                margin: 0 10px;
+            }
+            
+            .builder-container, .map-container {
+                flex-direction: column;
+            }
+            
+            .logo {
+                font-size: 1.5rem;
+            }
+        }
+        
+        /* SVG анимация */
+        .tech-icon {
+            display: block;
+            margin: 20px auto;
+            width: 100px;
+            height: 100px;
+        }
+        
+        .tech-icon path {
+            fill: none;
+            stroke: #3498db;
+            stroke-width: 2;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: draw 5s forwards;
+        }
+        
+        @keyframes draw {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <div class="logo">TechStore</div>
+            <nav>
+                <ul>
+                    <li><a href="#">Главная</a></li>
+                    <li><a href="#">Каталог</a></li>
+                    <li><a href="#">О нас</a></li>
+                    <li><a href="#">Контакты</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- SVG анимация -->
+        <svg class="tech-icon" viewBox="0 0 100 100">
+            <path d="M20,20 L80,20 L80,80 L20,80 Z M30,30 L70,30 L70,70 L30,70 Z M40,40 L60,40 L60,60 L40,60 Z" />
+            <circle cx="50" cy="50" r="15" />
+        </svg>
+
+        <!-- Конфигуратор ПК -->
+        <section class="pc-builder">
+            <h2>Конфигуратор ПК</h2>
+            <div class="builder-container">
+                <div class="components-selector">
+                    <div class="component-category">
+                        <h3>Процессор</h3>
+                        <select id="cpu-select" class="component-dropdown">
+                            <option value="">Выберите процессор</option>
+                        </select>
+                    </div>
+                    <div class="component-category">
+                        <h3>Материнская плата</h3>
+                        <select id="motherboard-select" class="component-dropdown">
+                            <option value="">Выберите материнскую плату</option>
+                        </select>
+                    </div>
+                    <div class="component-category">
+                        <h3>Видеокарта</h3>
+                        <select id="gpu-select" class="component-dropdown">
+                            <option value="">Выберите видеокарту</option>
+                        </select>
+                    </div>
+                    <div class="component-category">
+                        <h3>Оперативная память</h3>
+                        <select id="ram-select" class="component-dropdown">
+                            <option value="">Выберите оперативную память</option>
+                        </select>
+                    </div>
+                    <div class="component-category">
+                        <h3>Накопитель</h3>
+                        <select id="storage-select" class="component-dropdown">
+                            <option value="">Выберите накопитель</option>
+                        </select>
+                    </div>
+                    <div class="component-category">
+                        <h3>Блок питания</h3>
+                        <select id="psu-select" class="component-dropdown">
+                            <option value="">Выберите блок питания</option>
+                        </select>
+                    </div>
+                    <div class="component-category">
+                        <h3>Корпус</h3>
+                        <select id="case-select" class="component-dropdown">
+                            <option value="">Выберите корпус</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="build-summary">
+                    <h3>Ваша сборка</h3>
+                    <div id="selected-components" class="selected-components-list">
+                        <!-- Список выбранных компонентов будет здесь -->
+                    </div>
+                    <div class="total-price">
+                        <h4>Итого:</h4>
+                        <span id="total-price">0</span> ₽
+                    </div>
+                    <div id="compatibility-errors" class="compatibility-errors"></div>
+                    <button id="save-build" class="save-build-btn">Сохранить сборку</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Карта магазинов -->
+        <section class="stores-map">
+            <h2>Магазины и пункты самовывоза</h2>
+            <div class="map-container">
+                <div id="map" class="interactive-map"></div>
+                <div class="delivery-info">
+                    <h3>Информация о доставке</h3>
+                    <div class="store-selector">
+                        <label for="store-select">Выберите магазин:</label>
+                        <select id="store-select" class="store-dropdown">
+                            <option value="">Выберите магазин</option>
+                        </select>
+                    </div>
+                    <div class="delivery-options">
+                        <div class="option">
+                            <input type="radio" id="pickup" name="delivery" value="pickup" checked>
+                            <label for="pickup">Самовывоз (бесплатно)</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="delivery" name="delivery" value="delivery">
+                            <label for="delivery">Доставка</label>
+                        </div>
+                    </div>
+                    <div id="delivery-details" class="delivery-details">
+                        <p>Выберите магазин для расчета стоимости доставки</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Конфигуратор ПК
+        document.addEventListener('DOMContentLoaded', function() {
+            // База данных компонентов
+            const components = {
+                cpus: [
+                    { id: 1, name: 'Intel Core i5-12400F', price: 15000, socket: 'LGA1700', tdp: 65 },
+                    { id: 2, name: 'AMD Ryzen 5 5600X', price: 18000, socket: 'AM4', tdp: 65 },
+                    { id: 3, name: 'Intel Core i7-12700K', price: 25000, socket: 'LGA1700', tdp: 125 },
+                    { id: 4, name: 'AMD Ryzen 7 5800X', price: 22000, socket: 'AM4', tdp: 105 }
+                ],
+                motherboards: [
+                    { id: 1, name: 'ASUS PRIME B660-PLUS', price: 12000, socket: 'LGA1700', ramType: 'DDR4' },
+                    { id: 2, name: 'MSI B550-A PRO', price: 11000, socket: 'AM4', ramType: 'DDR4' },
+                    { id: 3, name: 'Gigabyte Z690 UD', price: 15000, socket: 'LGA1700', ramType: 'DDR4' },
+                    { id: 4, name: 'ASUS ROG STRIX X570-E', price: 20000, socket: 'AM4', ramType: 'DDR4' }
+                ],
+                gpus: [
+                    { id: 1, name: 'NVIDIA GeForce RTX 3060', price: 35000, power: 170 },
+                    { id: 2, name: 'AMD Radeon RX 6600', price: 30000, power: 132 },
+                    { id: 3, name: 'NVIDIA GeForce RTX 3070', price: 50000, power: 220 },
+                    { id: 4, name: 'AMD Radeon RX 6700 XT', price: 45000, power: 230 }
+                ],
+                rams: [
+                    { id: 1, name: 'Corsair Vengeance LPX 16GB', price: 6000, type: 'DDR4' },
+                    { id: 2, name: 'Kingston Fury Beast 32GB', price: 10000, type: 'DDR4' },
+                    { id: 3, name: 'G.Skill Trident Z RGB 16GB', price: 8000, type: 'DDR4' },
+                    { id: 4, name: 'Crucial Ballistix 32GB', price: 12000, type: 'DDR4' }
+                ],
+                storages: [
+                    { id: 1, name: 'Samsung 970 EVO Plus 500GB', price: 7000, type: 'NVMe' },
+                    { id: 2, name: 'WD Blue 1TB HDD', price: 3000, type: 'SATA' },
+                    { id: 3, name: 'Crucial P5 1TB', price: 10000, type: 'NVMe' },
+                    { id: 4, name: 'Seagate BarraCuda 2TB', price: 5000, type: 'SATA' }
+                ],
+                psus: [
+                    { id: 1, name: 'Corsair RM650x', price: 8000, wattage: 650 },
+                    { id: 2, name: 'Be Quiet! Pure Power 11 700W', price: 8500, wattage: 700 },
+                    { id: 3, name: 'Seasonic Focus GX-750', price: 10000, wattage: 750 },
+                    { id: 4, name: 'EVGA SuperNOVA 850 G6', price: 12000, wattage: 850 }
+                ],
+                cases: [
+                    { id: 1, name: 'NZXT H510', price: 7000, formFactor: 'ATX' },
+                    { id: 2, name: 'Fractal Design Meshify C', price: 8000, formFactor: 'ATX' },
+                    { id: 3, name: 'Cooler Master MasterBox Q300L', price: 5000, formFactor: 'mATX' },
+                    { id: 4, name: 'Lian Li PC-O11 Dynamic', price: 12000, formFactor: 'ATX' }
+                ]
+            };
+
+            // Заполняем выпадающие списки
+            fillDropdown('cpu-select', components.cpus);
+            fillDropdown('motherboard-select', components.motherboards);
+            fillDropdown('gpu-select', components.gpus);
+            fillDropdown('ram-select', components.rams);
+            fillDropdown('storage-select', components.storages);
+            fillDropdown('psu-select', components.psus);
+            fillDropdown('case-select', components.cases);
+
+            // Обработчики изменений
+            document.querySelectorAll('.component-dropdown').forEach(select => {
+                select.addEventListener('change', updateBuildSummary);
+            });
+
+            // Кнопка сохранения сборки
+            document.getElementById('save-build').addEventListener('click', saveBuild);
+
+            // Загрузка сохраненной сборки, если есть
+            loadSavedBuild();
+
+            function fillDropdown(id, items) {
+                const select = document.getElementById(id);
+                items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = `${item.name} - ${item.price} ₽`;
+                    select.appendChild(option);
+                });
+            }
+
+            function updateBuildSummary() {
+                const selectedComponents = {};
+                let totalPrice = 0;
+                let hasSelection = false;
+
+                // Собираем выбранные компоненты
+                document.querySelectorAll('.component-dropdown').forEach(select => {
+                    const category = select.id.replace('-select', '');
+                    const selectedId = parseInt(select.value);
+                    
+                    if (selectedId) {
+                        hasSelection = true;
+                        const component = components[category + 's'].find(c => c.id === selectedId);
+                        selectedComponents[category] = component;
+                        totalPrice += component.price;
+                    } else {
+                        selectedComponents[category] = null;
+                    }
+                });
+
+                // Обновляем список компонентов
+                const componentsList = document.getElementById('selected-components');
+                componentsList.innerHTML = '';
+                
+                for (const [category, component] of Object.entries(selectedComponents)) {
+                    if (component) {
+                        const item = document.createElement('div');
+                        item.className = 'component-item';
+                        item.innerHTML = `
+                            <span class="component-name">${component.name}</span>
+                            <span class="component-price">${component.price} ₽</span>
+                        `;
+                        componentsList.appendChild(item);
+                    }
+                }
+
+                // Обновляем общую цену
+                document.getElementById('total-price').textContent = totalPrice;
+
+                // Проверяем совместимость
+                checkCompatibility(selectedComponents);
+            }
+
+            function checkCompatibility(components) {
+                const errorsContainer = document.getElementById('compatibility-errors');
+                errorsContainer.innerHTML = '';
+                const errors = [];
+
+                // Проверка совместимости процессора и материнской платы
+                if (components.cpu && components.motherboard) {
+                    if (components.cpu.socket !== components.motherboard.socket) {
+                        errors.push('Процессор и материнская плата не совместимы по сокету');
+                    }
+                }
+
+                // Проверка совместимости ОЗУ и материнской платы
+                if (components.ram && components.motherboard) {
+                    if (components.ram.type !== components.motherboard.ramType) {
+                        errors.push('Тип оперативной памяти не совместим с материнской платой');
+                    }
+                }
+
+                // Проверка мощности блока питания
+                if (components.psu) {
+                    let totalPower = 0;
+                    if (components.cpu) totalPower += components.cpu.tdp;
+                    if (components.gpu) totalPower += components.gpu.power;
+                    // Добавляем 100W для остальных компонентов
+                    totalPower += 100;
+                    
+                    if (totalPower > components.psu.wattage * 0.8) { // Используем 80% от номинала БП
+                        errors.push(`Блок питания может быть недостаточно мощным (рекомендуется от ${Math.ceil(totalPower / 0.8)}W)`);
+                    }
+                }
+
+                // Проверка совместимости корпуса и материнской платы
+                if (components.case && components.motherboard) {
+                    const caseFormFactor = components.case.formFactor;
+                    const mbFormFactor = components.motherboard.formFactor || 'ATX'; // По умолчанию ATX
+                    
+                    // Упрощенная проверка совместимости форм-факторов
+                    if (caseFormFactor === 'mATX' && mbFormFactor === 'ATX') {
+                        errors.push('Материнская плата ATX не поместится в корпус mATX');
+                    }
+                }
+
+                // Выводим ошибки
+                if (errors.length > 0) {
+                    errors.forEach(error => {
+                        const errorElement = document.createElement('div');
+                        errorElement.className = 'error-message';
+                        errorElement.textContent = error;
+                        errorsContainer.appendChild(errorElement);
+                    });
+                }
+            }
+
+            function saveBuild() {
+                const build = {};
+                document.querySelectorAll('.component-dropdown').forEach(select => {
+                    const category = select.id.replace('-select', '');
+                    build[category] = select.value;
+                });
+                
+                localStorage.setItem('savedPcBuild', JSON.stringify(build));
+                alert('Сборка сохранена!');
+            }
+
+            function loadSavedBuild() {
+                const savedBuild = localStorage.getItem('savedPcBuild');
+                if (savedBuild) {
+                    const build = JSON.parse(savedBuild);
+                    for (const [category, id] of Object.entries(build)) {
+                        const select = document.getElementById(`${category}-select`);
+                        if (select && id) {
+                            select.value = id;
+                        }
+                    }
+                    updateBuildSummary();
+                }
+            }
+
+            // Карта магазинов
+            // Данные магазинов
+            const stores = [
+                {
+                    id: 1,
+                    name: 'Центральный магазин',
+                    address: 'ул. Компьютерная, 1',
+                    coords: [53.379231, 58.976412], // Москва
+                    deliveryZones: [
+                        { radius: 5, price: 0 },
+                        { radius: 10, price: 500 },
+                        { radius: 20, price: 1000 },
+                        { radius: Infinity, price: 2000 }
+                    ]
+                },
+                {
+                    id: 2,
+                    name: 'Северный филиал',
+                    address: 'пр. Процессорный, 15',
+                    coords: [53.367364, 58.989356], // Север Москвы
+                    deliveryZones: [
+                        { radius: 5, price: 0 },
+                        { radius: 15, price: 700 },
+                        { radius: 30, price: 1500 },
+                        { radius: Infinity, price: 2500 }
+                    ]
+                },
+                {
+                    id: 3,
+                    name: 'Южный пункт выдачи',
+                    address: 'бул. Видеокартный, 42',
+                    coords: [53.359246, 58.960902], // Юг Москвы
+                    deliveryZones: [
+                        { radius: 3, price: 0 },
+                        { radius: 10, price: 600 },
+                        { radius: 20, price: 1200 },
+                        { radius: Infinity, price: 2200 }
+                    ]
+                }
+            ];
+
+            // Инициализация карты
+            const map = L.map('map').setView([53.403807, 58.975614], 11);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Добавляем маркеры магазинов
+            stores.forEach(store => {
+                const marker = L.marker(store.coords).addTo(map)
+                    .bindPopup(`<b>${store.name}</b><br>${store.address}`);
+                
+                marker.on('click', function() {
+                    document.getElementById('store-select').value = store.id;
+                    updateDeliveryInfo();
+                });
+            });
+
+            // Заполняем выпадающий список магазинов
+            const storeSelect = document.getElementById('store-select');
+            stores.forEach(store => {
+                const option = document.createElement('option');
+                option.value = store.id;
+                option.textContent = `${store.name} - ${store.address}`;
+                storeSelect.appendChild(option);
+            });
+
+            // Обработчики событий
+            storeSelect.addEventListener('change', updateDeliveryInfo);
+            document.querySelectorAll('input[name="delivery"]').forEach(radio => {
+                radio.addEventListener('change', updateDeliveryInfo);
+            });
+
+            function updateDeliveryInfo() {
+                const storeId = parseInt(storeSelect.value);
+                const deliveryType = document.querySelector('input[name="delivery"]:checked').value;
+                const detailsContainer = document.getElementById('delivery-details');
+                
+                if (!storeId) {
+                    detailsContainer.innerHTML = '<p>Выберите магазин для расчета стоимости доставки</p>';
+                    return;
+                }
+                
+                const store = stores.find(s => s.id === storeId);
+                
+                if (deliveryType === 'pickup') {
+                    detailsContainer.innerHTML = `
+                        <h4>Самовывоз</h4>
+                        <p><strong>Адрес:</strong> ${store.address}</p>
+                        <p><strong>Стоимость:</strong> Бесплатно</p>
+                        <p>Часы работы: 10:00 - 20:00</p>
+                    `;
+                } else {
+                    detailsContainer.innerHTML = `
+                        <h4>Доставка</h4>
+                        <p><strong>Адрес магазина:</strong> ${store.address}</p>
+                        <div class="delivery-zones">
+                            <p><strong>Зоны доставки:</strong></p>
+                            <ul>
+                                ${store.deliveryZones.map(zone => `
+                                    <li>До ${zone.radius} км - ${zone.price} ₽</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        <div class="address-input">
+                            <label for="delivery-address">Введите ваш адрес:</label>
+                            <input type="text" id="delivery-address" placeholder="ул. Примерная, 10">
+                            <button id="calculate-delivery" class="calculate-btn">Рассчитать стоимость</button>
+                        </div>
+                        <div id="delivery-result"></div>
+                    `;
+                    
+                    document.getElementById('calculate-delivery').addEventListener('click', calculateDelivery);
+                }
+            }
+
+            function calculateDelivery() {
+                const address = document.getElementById('delivery-address').value;
+                if (!address) {
+                    alert('Введите адрес для расчета доставки');
+                    return;
+                }
+                
+                // Здесь должна быть реальная геокодировка адреса, но для примера используем случайное расстояние
+                const storeId = parseInt(storeSelect.value);
+                const store = stores.find(s => s.id === storeId);
+                const distance = Math.random() * 30; // Случайное расстояние до 30 км
+                
+                let deliveryPrice = 0;
+                for (const zone of store.deliveryZones) {
+                    if (distance <= zone.radius) {
+                        deliveryPrice = zone.price;
+                        break;
+                    }
+                }
+                
+                document.getElementById('delivery-result').innerHTML = `
+                    <p><strong>Расчет доставки:</strong></p>
+                    <p>Расстояние до магазина: ${distance.toFixed(1)} км</p>
+                    <p><strong>Стоимость доставки:</strong> ${deliveryPrice} ₽</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
