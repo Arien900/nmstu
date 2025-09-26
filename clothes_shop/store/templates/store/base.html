@@ -1,0 +1,48 @@
+<!doctype html>
+{% load static %}
+<html lang="{{ request.COOKIES.language|default:'ru' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Clothes Shop{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="{% if request.COOKIES.theme == 'dark' %}theme-dark{% else %}theme-light{% endif %}">
+  <header class="site-header">
+    <h1><a href="{% url 'store:index' %}">Clothes Shop</a></h1>
+    <nav>
+      <a href="{% url 'store:index' %}">Каталог</a> |
+      <a href="{% url 'store:user_settings' %}">Настройки</a>
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <small>Clothes Shop — демо. Текущая тема: {{ request.COOKIES.theme|default:'light' }}, язык: {{ request.COOKIES.language|default:'ru' }}</small>
+  </footer>
+
+  <script>
+    // Вспомог: отправить POST на toggle_favorite
+    async function toggleFavorite(productId) {
+      const resp = await fetch(`/toggle_favorite/${productId}/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': getCookie('csrftoken')},
+      });
+      const data = await resp.json();
+      if (data.status === 'ok') {
+        const btn = document.getElementById('fav-btn-' + productId);
+        if (data.action === 'added') btn.innerText = 'Убрать из избранного';
+        else btn.innerText = 'Добавить в избранное';
+      }
+    }
+    function getCookie(name) {
+      let v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+      return v ? v.pop() : '';
+    }
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
