@@ -1,0 +1,41 @@
+{% extends "store/base.html" %}
+{% load static style_tags %}
+
+{% block content %}
+<h2>{{ L.catalog }}</h2>
+
+<div class="products">
+  {% for product in products %}
+  <div class="card">
+    <img src="{% static product.image %}" alt="{{ product.name }}" class="thumb">
+    <h3><a href="{% url 'store:product_detail' product.id %}">{{ product.name }}</a></h3>
+    <p>{{ product.description }}</p>
+    <p>{{ L.price }}: {{ product.price }} руб.</p>
+
+    <p>Стили:
+      {% for st in product.styles %}
+        {% style_label st %}{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    </p>
+
+    {% if product.id in favorites %}
+      <button id="fav-btn-{{ product.id }}" onclick="toggleFavorite({{ product.id }});">{{ L.remove_fav }}</button>
+    {% else %}
+      <button id="fav-btn-{{ product.id }}" onclick="toggleFavorite({{ product.id }});">{{ L.add_fav }}</button>
+    {% endif %}
+  </div>
+  {% empty %}
+    <p>Товары отсутствуют.</p>
+  {% endfor %}
+</div>
+
+<hr/>
+<h3>{{ L.last_pages }}</h3>
+<ul>
+  {% for p in last_pages %}
+    <li><a href="{{ p }}">{{ p }}</a></li>
+  {% empty %}
+    <li>Нет посещений</li>
+  {% endfor %}
+</ul>
+{% endblock %}

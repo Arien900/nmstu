@@ -1,0 +1,23 @@
+<!doctype html>
+{% load static %}
+<html lang="{{ LANG|default:'ru' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Clothes Shop{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="{% if request.COOKIES.theme == 'dark' %}theme-dark{% else %}theme-light{% endif %}">
+  <header class="site-header">
+    <h1><a href="{% url 'store:index' %}">Clothes Shop</a></h1>
+    <nav>
+      <a href="{% url 'store:index' %}">{{ L.catalog }}</a> |
+      <a href="{% url 'store:user_settings' %}">{{ L.settings }}</a>
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
