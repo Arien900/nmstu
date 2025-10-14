@@ -1,19 +1,13 @@
 {% extends 'grades/base.html' %}
 {% block content %}
-
-<div style="margin-bottom: 20px; padding: 10px; background: #f9f9f9; border-radius: 5px;">
-  <a href="{% url 'export_combined' 'json' %}" style="margin-right: 15px; color: blue; text-decoration: none;">Все JSON в один файл</a>
-  <a href="{% url 'export_combined' 'xml' %}" style="color: blue; text-decoration: none;">Все XML в один файл</a>
-</div>
-
+<a href="{% url 'export_all' %}">Скачать все XML</a>
 {% if error %}
   <p>{{ error }}</p>
 {% else %}
   {% for f in files %}
     <h3>{{ f.name }}</h3>
     <pre>{{ f.data }}</pre>
-    <a href="{% url 'export' f.name %}" style="color:green; text-decoration: none;">Скачать этот файл</a>
-    <hr>
+    <a href="{% url 'export' f.name %}">Скачать</a><hr>
   {% endfor %}
 {% endif %}
 {% endblock %}

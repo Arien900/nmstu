@@ -1,8 +1,7 @@
 {% extends 'grades/base.html' %}
 {% block content %}
 <form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Загрузить</button>
+  {% csrf_token %}{{ form.as_p }}
+  <button>Загрузить XML</button>
 </form>
 {% endblock %}

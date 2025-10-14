@@ -7,5 +7,5 @@ urlpatterns = [
     path('upload/', views.upload_file, name='upload'),
     path('list/', views.list_files, name='list'),
     path('export/<str:filename>/', views.export_file, name='export'),
-    path('export-combined/<str:ext>/', views.export_combined, name='export_combined'),
+    path('export-all/', views.export_all, name='export_all'),
 ]
