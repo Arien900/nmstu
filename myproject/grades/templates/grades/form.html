@@ -1,0 +1,9 @@
+{% extends 'grades/base.html' %}
+{% block content %}
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" name="format" value="json">Сохранить в JSON</button>
+  <button type="submit" name="format" value="xml">Сохранить в XML</button>
+</form>
+{% endblock %}

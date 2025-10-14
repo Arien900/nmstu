@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Успеваемость</title>
+  <style>
+    nav { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+    nav a { margin-right: 15px; text-decoration: none; color: #0066cc; }
+    nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="{% url 'home' %}">Главная</a>
+    <a href="{% url 'save' %}">Добавить оценку</a>
+    <a href="{% url 'upload' %}">Загрузить файл</a>
+    <a href="{% url 'list' %}">Список файлов</a>
+  </nav>
+  <div style="padding: 10px;">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>
