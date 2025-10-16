@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<grades><grade><student>fds</student><subject>fds</subject><grade>1</grade></grade><grade><student>dsfsd</student><subject>fdsf</subject><grade>5</grade></grade><grade><student>Nikita</student><subject>math</subject><grade>5</grade></grade><grade><student>Мыкола</student><subject>Математика</subject><grade>5</grade></grade><grade>
+  <student>Иванов Иван</student>
+  <subject>Математика</subject>
+  <grade>5</grade>
+</grade><grade><student>Nikita</student><subject>russian</subject><grade>5</grade></grade></grades>

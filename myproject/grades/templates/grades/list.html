@@ -1,13 +1,17 @@
 {% extends 'grades/base.html' %}
 {% block content %}
-<a href="{% url 'export_all' %}">Скачать все XML</a>
-{% if error %}
-  <p>{{ error }}</p>
-{% else %}
+<a href="{% url 'export_all' %}">Скачать общий XML</a>
+
+{% if files %}
   {% for f in files %}
-    <h3>{{ f.name }}</h3>
-    <pre>{{ f.data }}</pre>
-    <a href="{% url 'export' f.name %}">Скачать</a><hr>
+    <div style="border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 5px;">
+      <h3>{{ f.name }}</h3>
+      <p><strong>Студент:</strong> {{ f.data.student }}</p>
+      <p><strong>Предмет:</strong> {{ f.data.subject }}</p>
+      <p><strong>Оценка:</strong> {{ f.data.grade }}</p>
+    </div>
   {% endfor %}
+{% else %}
+  <p>Нет записей.</p>
 {% endif %}
 {% endblock %}

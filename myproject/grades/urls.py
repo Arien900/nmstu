@@ -2,10 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.home, name='home'),
+    path('', views.list_files, name='home'),
+    path('list/', views.list_files, name='list'),  # ← добавили
     path('save/', views.save_data, name='save'),
     path('upload/', views.upload_file, name='upload'),
-    path('list/', views.list_files, name='list'),
-    path('export/<str:filename>/', views.export_file, name='export'),
     path('export-all/', views.export_all, name='export_all'),
 ]

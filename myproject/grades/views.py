@@ -1,5 +1,4 @@
 import os
-import uuid
 from xml.etree import ElementTree as ET
 from django.shortcuts import render
 from django.http import HttpResponse
@@ -8,81 +7,71 @@ from .forms import GradeForm, UploadFileForm
 
 UPLOAD_DIR = os.path.join(settings.MEDIA_ROOT, 'uploads')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+MAIN_XML = os.path.join(UPLOAD_DIR, 'grades.xml')
+
+def ensure_main_xml():
+    if not os.path.exists(MAIN_XML):
+        root = ET.Element("grades")
+        ET.ElementTree(root).write(MAIN_XML, encoding='utf-8', xml_declaration=True)
 
 def save_data(request):
+    ensure_main_xml()
     if request.method == 'POST':
         form = GradeForm(request.POST)
         if form.is_valid():
-            data = form.cleaned_data
-            root = ET.Element("grade")
-            for k, v in data.items():
-                ET.SubElement(root, k).text = str(v)
-            path = os.path.join(UPLOAD_DIR, f"{uuid.uuid4()}.xml")
-            ET.ElementTree(root).write(path, encoding='utf-8', xml_declaration=True)
-            return HttpResponse("Сохранено!")
+            tree = ET.parse(MAIN_XML)
+            root = tree.getroot()
+            grade_elem = ET.SubElement(root, "grade")
+            for k, v in form.cleaned_data.items():
+                ET.SubElement(grade_elem, k).text = str(v)
+            tree.write(MAIN_XML, encoding='utf-8', xml_declaration=True)
+            return HttpResponse("Добавлено в общий XML!")
     return render(request, 'grades/form.html', {'form': GradeForm()})
 
 def upload_file(request):
+    ensure_main_xml()
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             f = request.FILES['file']
             if not f.name.endswith('.xml'):
                 return HttpResponse("Только .xml")
-            path = os.path.join(UPLOAD_DIR, f"{uuid.uuid4()}.xml")
-            with open(path, 'wb') as dest:
+            temp_path = os.path.join(UPLOAD_DIR, 'temp.xml')
+            with open(temp_path, 'wb') as dest:
                 for chunk in f.chunks():
                     dest.write(chunk)
             try:
-                ET.parse(path)
-                return HttpResponse("Загружено!")
-            except:
-                os.remove(path)
-                return HttpResponse("Невалидный XML. Удалён.")
+                temp_tree = ET.parse(temp_path)
+                temp_root = temp_tree.getroot()
+                main_tree = ET.parse(MAIN_XML)
+                main_root = main_tree.getroot()
+                for grade in temp_root.findall('grade'):
+                    main_root.append(grade)
+                main_tree.write(MAIN_XML, encoding='utf-8', xml_declaration=True)
+                os.remove(temp_path)
+                return HttpResponse("Записи добавлены в общий XML!")
+            except Exception as e:
+                os.remove(temp_path)
+                return HttpResponse(f"Ошибка XML: {e}")
     return render(request, 'grades/upload.html', {'form': UploadFileForm()})
 
 def list_files(request):
-    files = []
-    for name in os.listdir(UPLOAD_DIR):
-        if name.endswith('.xml'):
-            try:
-                root = ET.parse(os.path.join(UPLOAD_DIR, name)).getroot()
-                files.append({'name': name, 'data': {e.tag: e.text for e in root}})
-            except:
-                continue
-    return render(request, 'grades/list.html', {
-        'files': files or None,
-        'error': 'Нет XML-файлов.' if not files else None
-    })
-
-def home(request):
-    return list_files(request)
-
-def export_file(request, filename):
-    if not filename.endswith('.xml'):
-        return HttpResponse("Только XML", status=400)
-    path = os.path.join(UPLOAD_DIR, filename)
-    if not os.path.exists(path):
-        return HttpResponse("Файл не найден", status=404)
-    with open(path, 'rb') as f:
-        resp = HttpResponse(f.read(), content_type='application/xml')
-        resp['Content-Disposition'] = f'attachment; filename="{filename}"'
-        return resp
+    ensure_main_xml()
+    try:
+        root = ET.parse(MAIN_XML).getroot()
+        files = []
+        for i, grade in enumerate(root.findall('grade')):
+            data = {child.tag: child.text for child in grade}
+            files.append({'name': f'Запись #{i+1}', 'data': data})
+        return render(request, 'grades/list.html', {'files': files})
+    except:
+        return render(request, 'grades/list.html', {'files': None})
 
 def export_all(request):
-    root = ET.Element("grades")
-    for name in os.listdir(UPLOAD_DIR):
-        if name.endswith('.xml'):
-            try:
-                grade = ET.parse(os.path.join(UPLOAD_DIR, name)).getroot()
-                root.append(grade)
-            except:
-                continue
-    if len(root) == 0:
-        return HttpResponse("Нет файлов", status=404)
-    resp = HttpResponse(
-        ET.tostring(root, encoding='utf-8', xml_declaration=True),
-        content_type='application/xml'
-    )
-    resp['Content-Disposition'] = 'attachment; filename="all.xml"'
-    return resp
+    ensure_main_xml()
+    if not os.path.exists(MAIN_XML):
+        return HttpResponse("Нет данных", status=404)
+    with open(MAIN_XML, 'rb') as f:
+        resp = HttpResponse(f.read(), content_type='application/xml')
+        resp['Content-Disposition'] = 'attachment; filename="grades.xml"'
+        return resp
