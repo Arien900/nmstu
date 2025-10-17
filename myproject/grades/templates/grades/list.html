@@ -9,6 +9,7 @@
       <p><strong>Студент:</strong> {{ f.data.student }}</p>
       <p><strong>Предмет:</strong> {{ f.data.subject }}</p>
       <p><strong>Оценка:</strong> {{ f.data.grade }}</p>
+      <p><strong>Согласие на обработку: </strong>{% if f.data.person %} Да {% else %} Нет {% endif %}</p>
     </div>
   {% endfor %}
 {% else %}

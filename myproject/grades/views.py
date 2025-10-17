@@ -22,6 +22,7 @@ def save_data(request):
             tree = ET.parse(MAIN_XML)
             root = tree.getroot()
             grade_elem = ET.SubElement(root, "grade")
+            print(form.cleaned_data.items())
             for k, v in form.cleaned_data.items():
                 ET.SubElement(grade_elem, k).text = str(v)
             tree.write(MAIN_XML, encoding='utf-8', xml_declaration=True)
@@ -63,6 +64,7 @@ def list_files(request):
         for i, grade in enumerate(root.findall('grade')):
             data = {child.tag: child.text for child in grade}
             files.append({'name': f'Запись #{i+1}', 'data': data})
+            print(files)
         return render(request, 'grades/list.html', {'files': files})
     except:
         return render(request, 'grades/list.html', {'files': None})

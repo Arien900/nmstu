@@ -3,4 +3,8 @@
   <student>Иванов Иван</student>
   <subject>Математика</subject>
   <grade>5</grade>
-</grade><grade><student>Nikita</student><subject>russian</subject><grade>5</grade></grade></grades>
+</grade><grade><student>Nikita</student><subject>russian</subject><grade>5</grade></grade><grade><student>Ilya</student><subject>Economic</subject><grade>2</grade></grade><grade><student>Kolya</student><subject>Math</subject><grade>5</grade></grade><grade><student>fds</student><subject>fds</subject><grade>1</grade></grade><grade><student>dsfsd</student><subject>fdsf</subject><grade>5</grade></grade><grade><student>Nikita</student><subject>math</subject><grade>5</grade></grade><grade><student>Мыкола</student><subject>Математика</subject><grade>5</grade></grade><grade>
+  <student>Иванов Иван</student>
+  <subject>Математика</subject>
+  <grade>5</grade>
+</grade><grade><student>Nikita</student><subject>russian</subject><grade>5</grade></grade><grade><student>Ilya</student><subject>Economic</subject><grade>2</grade></grade><grade><student>Kolya</student><subject>Math</subject><grade>5</grade></grade><grade><student>Ilya</student><subject>Economic</subject><grade>2</grade></grade><grade><student>Kolya</student><subject>ru</subject><grade>5</grade><check>True</check></grade><grade><student>Kolya</student><subject>ru</subject><grade>5</grade><check>True</check></grade><grade><student>Kolya</student><subject>ru</subject><grade>5</grade><check>True</check></grade><grade><student>Kolya</student><subject>Math</subject><grade>5</grade><person>True</person></grade></grades>
