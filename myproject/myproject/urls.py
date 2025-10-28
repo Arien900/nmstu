@@ -20,6 +20,5 @@ from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', RedirectView.as_view(url='/list/'), name='home'),
     path('', include('grades.urls')),
 ]

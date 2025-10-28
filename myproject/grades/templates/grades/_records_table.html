@@ -1,0 +1,20 @@
+{% if records %}
+<table class="table">
+  <thead><tr><th>Студент</th><th>Предмет</th><th>Оценка</th><th>Действия</th></tr></thead>
+  <tbody>
+    {% for r in records %}
+    <tr>
+      <td contenteditable="true" class="s" data-id="{{ r.id }}">{{ r.student }}</td>
+      <td contenteditable="true" class="sbj" data-id="{{ r.id }}">{{ r.subject }}</td>
+      <td contenteditable="true" class="g" data-id="{{ r.id }}">{{ r.grade }}</td>
+      <td>
+        <button class="btn btn-sm btn-warning save" data-id="{{ r.id }}">💾</button>
+        <button class="btn btn-sm btn-danger del" data-id="{{ r.id }}">🗑</button>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Нет записей в базе.</p>
+{% endif %}
