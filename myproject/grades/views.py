@@ -1,5 +1,4 @@
 import os
-import uuid
 from xml.etree import ElementTree as ET
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
@@ -9,7 +8,13 @@ from .forms import GradeForm, UploadFileForm
 from .models import GradeRecord
 
 UPLOAD_DIR = os.path.join('media', 'uploads')
+MAIN_XML = os.path.join(UPLOAD_DIR, 'grades.xml')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+def ensure_main_xml():
+    if not os.path.exists(MAIN_XML):
+        root = ET.Element("grades")
+        ET.ElementTree(root).write(MAIN_XML, encoding='utf-8', xml_declaration=True)
 
 def save_data(request):
     if request.method == 'POST':
@@ -27,17 +32,20 @@ def save_data(request):
                 except IntegrityError:
                     form.add_error(None, "Такая запись уже есть в базе!")
             else:
-                root = ET.Element("grade")
+                ensure_main_xml()
+                tree = ET.parse(MAIN_XML)
+                root = tree.getroot()
+                grade_elem = ET.SubElement(root, "grade")
                 for k in ['student', 'subject', 'grade']:
-                    ET.SubElement(root, k).text = str(data[k])
-                path = os.path.join(UPLOAD_DIR, f"{uuid.uuid4()}.xml")
-                ET.ElementTree(root).write(path, encoding='utf-8', xml_declaration=True)
+                    ET.SubElement(grade_elem, k).text = str(data[k])
+                tree.write(MAIN_XML, encoding='utf-8', xml_declaration=True)
                 return redirect('home')
     else:
         form = GradeForm()
     return render(request, 'grades/form.html', {'form': form})
 
 def upload_file(request):
+    ensure_main_xml()
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
@@ -45,15 +53,21 @@ def upload_file(request):
             if not f.name.endswith('.xml'):
                 form.add_error('file', 'Только XML-файлы!')
             else:
-                path = os.path.join(UPLOAD_DIR, f"{uuid.uuid4()}.xml")
-                with open(path, 'wb') as dest:
+                temp_path = os.path.join(UPLOAD_DIR, 'temp.xml')
+                with open(temp_path, 'wb') as dest:
                     for chunk in f.chunks():
                         dest.write(chunk)
                 try:
-                    ET.parse(path)
+                    temp_tree = ET.parse(temp_path)
+                    main_tree = ET.parse(MAIN_XML)
+                    main_root = main_tree.getroot()
+                    for grade in temp_tree.findall('grade'):
+                        main_root.append(grade)
+                    main_tree.write(MAIN_XML, encoding='utf-8', xml_declaration=True)
+                    os.remove(temp_path)
                     return redirect('home')
-                except:
-                    os.remove(path)
+                except Exception:
+                    os.remove(temp_path)
                     form.add_error('file', 'Невалидный XML!')
     else:
         form = UploadFileForm()
@@ -64,18 +78,17 @@ def list_files(request):
     context = {'source': source}
     if source == 'file':
         files = []
-        for name in os.listdir(UPLOAD_DIR):
-            if name.endswith('.xml'):
-                try:
-                    root = ET.parse(os.path.join(UPLOAD_DIR, name)).getroot()
-                    files.append({e.tag: e.text for e in root})
-                except:
-                    continue
+        if os.path.exists(MAIN_XML):
+            try:
+                root = ET.parse(MAIN_XML).getroot()
+                for grade in root.findall('grade'):
+                    files.append({child.tag: child.text for child in grade})
+            except:
+                pass
         context['files'] = files
     else:
         context['records'] = GradeRecord.objects.all()
     return render(request, 'grades/list.html', context)
-
 def search_records(request):
     query = request.GET.get('q', '')
     records = GradeRecord.objects.filter(
@@ -86,25 +99,16 @@ def search_records(request):
 @require_http_methods(["POST"])
 def edit_record(request, pk):
     try:
-        student = request.POST.get('student', '').strip()
-        subject = request.POST.get('subject', '').strip()
-        grade_str = request.POST.get('grade', '').strip()
-        if not student or not subject or not grade_str:
+        r = GradeRecord.objects.get(pk=pk)
+        s, subj, g = request.POST.get('student'), request.POST.get('subject'), request.POST.get('grade')
+        if not s or not subj or not g:
             return JsonResponse({'error': 'Все поля обязательны'}, status=400)
-        try:
-            grade = int(grade_str)
-            if grade < 1 or grade > 5:
-                raise ValueError
-        except ValueError:
+        g = int(g)
+        if g < 1 or g > 5:
             return JsonResponse({'error': 'Оценка от 1 до 5'}, status=400)
-        record = GradeRecord.objects.get(pk=pk)
-        record.student = student
-        record.subject = subject
-        record.grade = grade
-        record.save()
+        r.student, r.subject, r.grade = s, subj, g
+        r.save()
         return JsonResponse({'ok': True})
-    except GradeRecord.DoesNotExist:
-        return JsonResponse({'error': 'Запись не найдена'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
