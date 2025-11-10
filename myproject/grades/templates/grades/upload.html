@@ -1,0 +1,10 @@
+{% extends 'grades/base.html' %}
+{% block content %}
+<h2>Загрузить XML</h2>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-primary">Загрузить</button>
+  <a href="{% url 'home' %}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}

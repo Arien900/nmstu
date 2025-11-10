@@ -1,0 +1,115 @@
+{% extends 'grades/base.html' %}
+{% block content %}
+<div class="btn-group mb-3" role="group">
+  <a href="?source=db" class="btn btn-{% if source == 'db' %}primary{% else %}outline-secondary{% endif %}">Из базы</a>
+  <a href="?source=file" class="btn btn-{% if source == 'file' %}primary{% else %}outline-secondary{% endif %}">Из файлов</a>
+</div>
+
+{% if source == 'db' %}
+  <div class="mb-3">
+    <input type="text" id="search" class="form-control" placeholder="Поиск по студенту или предмету...">
+  </div>
+  <div id="records">
+    {% include 'grades/_records_table.html' %}
+  </div>
+{% else %}
+  {% if files %}
+    {% for f in files %}
+      <div class="card mb-2">
+        <div class="card-body">
+          <p><strong>Студент:</strong> {{ f.student }}</p>
+          <p><strong>Предмет:</strong> {{ f.subject }}</p>
+          <p><strong>Оценка:</strong> {{ f.grade }}</p>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-muted">Нет XML-файлов.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if source == 'db' %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Поиск
+    document.getElementById('search').addEventListener('input', function() {
+        const q = this.value;
+        fetch(`{% url 'search' %}?q=` + encodeURIComponent(q))
+            .then(response => response.json())
+            .then(records => {
+                let html = '<table class="table table-striped"><thead><tr><th>Студент</th><th>Предмет</th><th>Оценка</th><th>Действия</th></tr></thead><tbody>';
+                records.forEach(r => {
+                    html += `<tr>
+                        <td contenteditable="true" class="s" data-id="${r.id}">${r.student}</td>
+                        <td contenteditable="true" class="sbj" data-id="${r.id}">${r.subject}</td>
+                        <td contenteditable="true" class="g" data-id="${r.id}">${r.grade}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning save" data-id="${r.id}">💾</button>
+                            <button class="btn btn-sm btn-danger del" data-id="${r.id}">🗑</button>
+                        </td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                document.getElementById('records').innerHTML = html;
+            })
+            .catch(err => console.error('Ошибка поиска:', err));
+    });
+
+    // Делегирование событий (работает для динамически добавленных строк)
+    document.getElementById('records').addEventListener('click', function(e) {
+        const btn = e.target.closest('.save, .del');
+        if (!btn) return;
+
+        const id = btn.dataset.id;
+
+        if (btn.classList.contains('save')) {
+            const student = document.querySelector(`.s[data-id="${id}"]`).textContent.trim();
+            const subject = document.querySelector(`.sbj[data-id="${id}"]`).textContent.trim();
+            const grade = document.querySelector(`.g[data-id="${id}"]`).textContent.trim();
+
+            if (!student || !subject || !grade) {
+                alert('Все поля обязательны');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('student', student);
+            formData.append('subject', subject);
+            formData.append('grade', grade);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            fetch(`/api/edit/${id}/`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.ok) {
+                    alert('Сохранено!');
+                } else {
+                    alert('Ошибка: ' + (data.error || 'неизвестно'));
+                }
+            })
+            .catch(err => alert('Ошибка сети: ' + err));
+        }
+
+        if (btn.classList.contains('del')) {
+            if (!confirm('Удалить запись?')) return;
+            fetch(`/api/delete/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(() => {
+                document.querySelector(`.s[data-id="${id}"]`).closest('tr').remove();
+            })
+            .catch(err => alert('Ошибка удаления: ' + err));
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}
