@@ -1,18 +1,16 @@
-import sys
-import time
+#!/usr/bin/env python3
 import socket
+import time
+import sys
 
 host, port = sys.argv[1].split(':')
 port = int(port)
 
-print(f"Ожидание PostgreSQL на {host}:{port}...")
-
+print("⏳ Ожидание PostgreSQL...")
 while True:
     try:
-        sock = socket.create_connection((host, port), timeout=1)
-        sock.close()
-        break
+        with socket.create_connection((host, port), timeout=1):
+            break
     except (socket.timeout, ConnectionRefusedError):
         time.sleep(1)
-
-print("PostgreSQL готов.")
+print("Готово.")
