@@ -1,6 +1,17 @@
 #!/bin/sh
-# Ждем пока Postgres будет готов
-python wait_for_postgres.py
+# start.sh
 
-# Запускаем Django сервер
+set -e
+
+echo "⏳ Waiting for PostgreSQL..."
+while ! pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER"; do
+  sleep 1
+done
+echo "PostgreSQL is ready!"
+
+# Выполняем миграции и статику
+python manage.py migrate --noinput
+python manage.py collectstatic --noinput --clear
+
+# Запуск сервера
 exec python manage.py runserver 0.0.0.0:8000

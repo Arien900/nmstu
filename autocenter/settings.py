@@ -5,8 +5,8 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY
-SECRET_KEY = os.getenv('SECRET_KEY', 'changeme')
-DEBUG = os.getenv('DEBUG', '1') == '1'
+SECRET_KEY = os.environ['SECRET_KEY']
+DEBUG = os.environ.get('DEBUG', 'false').lower() in ('1', 'true')
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "0.0.0.0"]
 
 # Applications
@@ -58,11 +58,11 @@ WSGI_APPLICATION = 'autocenter.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'autocenter_db'),
-        'USER': os.getenv('POSTGRES_USER', 'autocenter_user'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'autocenter_pass'),
-        'HOST': os.getenv('POSTGRES_HOST', 'db'),
-        'PORT': os.getenv('POSTGRES_PORT', '5432'),
+        'NAME': os.environ['POSTGRES_DB'],
+        'USER': os.environ['POSTGRES_USER'],
+        'PASSWORD': os.environ['POSTGRES_PASSWORD'],
+        'HOST': os.environ['POSTGRES_HOST'],
+        'PORT': os.environ['POSTGRES_PORT'],
     }
 }
 
@@ -103,5 +103,18 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# CORS (если используешь фронт отдельно)
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {token}"'
+        }
+    },
+    'USE_SESSION_AUTH': False,  # отключаем сессии (мы используем JWT)
+    'JSON_EDITOR': True,
+}
+
+# CORS
 CORS_ALLOW_ALL_ORIGINS = True
