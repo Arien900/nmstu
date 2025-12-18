@@ -1,28 +1,37 @@
-version: '3.8'
-
+# docker-compose.yml
 services:
   db:
     image: postgres:15
+    env_file:
+      - .env
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: pc_config_db
-      POSTGRES_USER: pc_user
-      POSTGRES_PASSWORD: securepass123 
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   web:
-    build: .   
+    build: .
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     environment:
-      - DEBUG=1
-      - SECRET_KEY=dev-secret-key-change-in-prod
+      - DEBUG=${DEBUG}
+      - SECRET_KEY=${SECRET_KEY}
       - DB_HOST=db
-      - DB_NAME=pc_config_db
-      - DB_USER=pc_user
-      - DB_PASSWORD=securepass123
+      - DB_NAME=${POSTGRES_DB}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - ADMIN_USER=${ADMIN_USER}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     depends_on:
       - db
+    # После инициализации — запускаем gunicorn
+    command: sh -c "/app/init.sh && gunicorn pc_config.wsgi:application --bind 0.0.0.0:8000"
 
 volumes:
   postgres_data:
