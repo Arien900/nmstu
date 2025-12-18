@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
 <h2>🎯 Готовые сборки</h2>
-<p>Выберите шаблон — и создайте сборку за 1 клик!</p>
 
 <div class="row mt-4">
-{% for preset in presets %}
+{% for item in presets_data %}
+  {% with preset=item.preset components=item.components total=item.total_price %}
   <div class="col-md-6 col-lg-4 mb-4">
     <div class="card h-100 shadow-sm">
-      <div class="card-header bg-{{ preset.target == 'gaming'|yesno:'success,info' }} text-white">
+      <div class="card-header bg-{% if preset.target == 'gaming' %}success{% elif preset.target == 'budget' %}warning{% else %}info{% endif %} text-white">
         <h4 class="mb-0">{{ preset.name }}</h4>
         <small>{{ preset.get_target_display }}</small>
       </div>
@@ -15,27 +15,25 @@
         <p>{{ preset.description }}</p>
         <h5>Компоненты:</h5>
         <ul class="list-unstyled">
-        {% for comp in preset.get_components %}
+        {% for comp in components %}
           <li>• {{ comp.name }} <span class="text-success float-end">{{ comp.price }} ₽</span></li>
         {% empty %}
           <li class="text-muted">Нет компонентов</li>
         {% endfor %}
         </ul>
-        {% with total=preset.get_components|make_list|total_price %}
         <hr>
-        <h4 class="text-center text-success">Итого: {{ total|floatformat:0 }} ₽</h4>
-        {% endwith %}
+        <h4 class="text-center text-success">Итого: {{ total|floatformat:"0" }} ₽</h4>
       </div>
       <div class="card-footer text-center">
         {% if user.is_authenticated %}
-          <a href="{% url 'use_preset' preset.id %}" class="btn btn-primary">➕ Создать на основе</a>
+          <a href="{% url 'use_preset' preset.id %}" class="btn btn-primary">➕ Создать</a>
         {% else %}
           <a href="{% url 'register' %}" class="btn btn-outline-primary">Зарегистрируйтесь</a>
         {% endif %}
       </div>
     </div>
   </div>
+  {% endwith %}
 {% endfor %}
 </div>
-
 {% endblock %}
