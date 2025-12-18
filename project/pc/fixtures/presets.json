@@ -1,0 +1,32 @@
+[
+{
+  "model": "pc.presetbuild",
+  "pk": 1,
+  "fields": {
+    "name": "Игровая 2025",
+    "description": "Для игр в 1440p на высоких настройках",
+    "target": "gaming",
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.presetbuild",
+  "pk": 2,
+  "fields": {
+    "name": "Офисная база",
+    "description": "Для работы, Zoom, Excel",
+    "target": "office",
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.presetbuild",
+  "pk": 3,
+  "fields": {
+    "name": "Бюджетная",
+    "description": "Для учёбы и интернета",
+    "target": "budget",
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+}
+]

@@ -1,0 +1,52 @@
+<!-- pc/templates/pc/export.html -->
+{% extends 'base.html' %}
+{% block content %}
+<h2>📊 Экспорт данных (только для администраторов)</h2>
+
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label class="form-label">Выберите таблицу</label>
+    <select name="model" class="form-control" id="model-select" onchange="updateFields()">
+      <option value="">-- Выберите --</option>
+      {% for m in models %}
+        <option value="{{ m.name }}">{{ m.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Выберите поля</label>
+    <div id="fields-container">
+      <p class="text-muted">Сначала выберите таблицу</p>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-success">📥 Скачать XLSX</button>
+</form>
+
+<script>
+function updateFields() {
+  const modelSelect = document.getElementById('model-select');
+  const fieldsContainer = document.getElementById('fields-container');
+  const modelName = modelSelect.value;
+
+  const models = {{ models|safe }};
+  const model = models.find(m => m.name === modelName);
+
+  if (model) {
+    let html = '';
+    model.fields.forEach(field => {
+      html += `
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="fields" value="${field}" id="field_${field}" checked>
+          <label class="form-check-label" for="field_${field}">${field}</label>
+        </div>`;
+    });
+    fieldsContainer.innerHTML = html;
+  } else {
+    fieldsContainer.innerHTML = '<p class="text-muted">Сначала выберите таблицу</p>';
+  }
+}
+</script>
+{% endblock %}

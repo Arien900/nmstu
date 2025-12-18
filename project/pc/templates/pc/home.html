@@ -1,0 +1,51 @@
+<!-- pc/templates/pc/home.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>🔥 Конфигуратор сборки ПК</h2>
+
+{% if user_role == 'guest' %}
+    <div class="alert alert-info">
+        Вы вошли как <strong>Гость</strong>. 
+        <a href="{% url 'register' %}" class="alert-link">Зарегистрируйтесь</a>, чтобы создавать сборки.
+    </div>
+{% endif %}
+
+<h3>Компоненты</h3>
+<div class="row">
+{% for component in components %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ component.name }}</h5>
+                <p class="card-text">
+                    <small class="text-muted">{{ component.category }}</small><br>
+                    {{ component.description|truncatewords:10 }}
+                </p>
+                <p class="h5 text-success">{{ component.price }} ₽</p>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <p>Компонентов пока нет.</p>
+{% endfor %}
+</div>
+
+{% if user.is_authenticated and user.role != 'guest' %}
+    <hr>
+    <h3>Ваши сборки</h3>
+    {% if builds %}
+        <ul class="list-group">
+        {% for build in builds %}
+            <li class="list-group-item d-flex justify-content-between">
+                <strong>{{ build.name }}</strong>
+                <span>{{ build.total_price }} ₽</span>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>У вас пока нет сборок. <a href="{% url 'create_build' %}">Создать новую</a>.</p>
+    {% endif %}
+    <a href="{% url 'create_build' %}" class="btn btn-primary mt-3">➕ Создать сборку</a>
+{% endif %}
+{% endblock %}

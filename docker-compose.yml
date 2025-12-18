@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: pc_config_db
+      POSTGRES_USER: pc_user
+      POSTGRES_PASSWORD: securepass123 
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build: .   
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=dev-secret-key-change-in-prod
+      - DB_HOST=db
+      - DB_NAME=pc_config_db
+      - DB_USER=pc_user
+      - DB_PASSWORD=securepass123
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

@@ -1,0 +1,257 @@
+[
+{
+  "model": "pc.component",
+  "pk": 1,
+  "fields": {
+    "name": "Intel Core i5-13600K",
+    "category": "CPU",
+    "price": "25000.00",
+    "description": "14 ядер, 5.1 ГГц, LGA1700",
+    "socket": "LGA1700",
+    "ram_type": "",
+    "has_pcie": false,
+    "power_consumption": 181,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 2,
+  "fields": {
+    "name": "AMD Ryzen 5 7600",
+    "category": "CPU",
+    "price": "18000.00",
+    "description": "6 ядер, AM5, 65 Вт",
+    "socket": "AM5",
+    "ram_type": "",
+    "has_pcie": false,
+    "power_consumption": 65,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 3,
+  "fields": {
+    "name": "Intel Core i3-13100",
+    "category": "CPU",
+    "price": "10000.00",
+    "description": "4 ядра, LGA1700, бюджетный",
+    "socket": "LGA1700",
+    "ram_type": "",
+    "has_pcie": false,
+    "power_consumption": 60,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 4,
+  "fields": {
+    "name": "ASUS ROG Strix B760-G",
+    "category": "Материнская плата",
+    "price": "18000.00",
+    "description": "LGA1700, DDR5, Wi-Fi 6",
+    "socket": "LGA1700",
+    "ram_type": "DDR5",
+    "has_pcie": true,
+    "power_consumption": 0,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 5,
+  "fields": {
+    "name": "MSI PRO B650M-A",
+    "category": "Материнская плата",
+    "price": "15000.00",
+    "description": "AM5, DDR5, micro-ATX",
+    "socket": "AM5",
+    "ram_type": "DDR5",
+    "has_pcie": true,
+    "power_consumption": 0,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 6,
+  "fields": {
+    "name": "Gigabyte H610M H",
+    "category": "Материнская плата",
+    "price": "7000.00",
+    "description": "LGA1700, DDR4, бюджетная",
+    "socket": "LGA1700",
+    "ram_type": "DDR4",
+    "has_pcie": true,
+    "power_consumption": 0,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 7,
+  "fields": {
+    "name": "Kingston Fury Beast 32 ГБ (2×16)",
+    "category": "ОЗУ",
+    "price": "12000.00",
+    "description": "DDR5, 6000 МГц",
+    "socket": "",
+    "ram_type": "DDR5",
+    "has_pcie": false,
+    "power_consumption": 5,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 8,
+  "fields": {
+    "name": "Crucial 16 ГБ DDR5",
+    "category": "ОЗУ",
+    "price": "6000.00",
+    "description": "DDR5, 5200 МГц",
+    "socket": "",
+    "ram_type": "DDR5",
+    "has_pcie": false,
+    "power_consumption": 3,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 9,
+  "fields": {
+    "name": "ADATA 8 ГБ DDR4",
+    "category": "ОЗУ",
+    "price": "3000.00",
+    "description": "DDR4, 3200 МГц",
+    "socket": "",
+    "ram_type": "DDR4",
+    "has_pcie": false,
+    "power_consumption": 2,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 10,
+  "fields": {
+    "name": "NVIDIA GeForce RTX 4070",
+    "category": "GPU",
+    "price": "65000.00",
+    "description": "12 ГБ VRAM, DLSS 3",
+    "socket": "",
+    "ram_type": "",
+    "has_pcie": false,
+    "power_consumption": 200,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 11,
+  "fields": {
+    "name": "Samsung 980 Pro 1 ТБ",
+    "category": "SSD",
+    "price": "10000.00",
+    "description": "NVMe, PCIe 4.0",
+    "socket": "",
+    "ram_type": "",
+    "has_pcie": false,
+    "power_consumption": 6,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 12,
+  "fields": {
+    "name": "Samsung 970 EVO 500 ГБ",
+    "category": "SSD",
+    "price": "5000.00",
+    "description": "NVMe, PCIe 3.0",
+    "socket": "",
+    "ram_type": "",
+    "has_pcie": false,
+    "power_consumption": 5,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 13,
+  "fields": {
+    "name": "Kingston A400 480 ГБ",
+    "category": "SSD",
+    "price": "2500.00",
+    "description": "SATA III, бюджетный",
+    "socket": "",
+    "ram_type": "",
+    "has_pcie": false,
+    "power_consumption": 3,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 14,
+  "fields": {
+    "name": "Corsair RM850e",
+    "category": "БП",
+    "price": "9000.00",
+    "description": "850 Вт, 80+ Gold",
+    "socket": "",
+    "ram_type": "",
+    "has_pcie": false,
+    "power_consumption": 0,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 15,
+  "fields": {
+    "name": "Cooler Master MWE 550",
+    "category": "БП",
+    "price": "5000.00",
+    "description": "550 Вт, 80+ Bronze",
+    "socket": "",
+    "ram_type": "",
+    "has_pcie": false,
+    "power_consumption": 0,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 16,
+  "fields": {
+    "name": "DeepCool DN450",
+    "category": "БП",
+    "price": "3000.00",
+    "description": "450 Вт, бюджетный",
+    "socket": "",
+    "ram_type": "",
+    "has_pcie": false,
+    "power_consumption": 0,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+},
+{
+  "model": "pc.component",
+  "pk": 17,
+  "fields": {
+    "name": "DeepCool AK620",
+    "category": "Охлаждение",
+    "price": "5000.00",
+    "description": "Башенный кулер",
+    "socket": "LGA1700,AM4,AM5",
+    "ram_type": "",
+    "has_pcie": false,
+    "power_consumption": 0,
+    "created_at": "2025-12-19T00:00:00Z"
+  }
+}
+]
