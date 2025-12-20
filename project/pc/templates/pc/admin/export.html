@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>📤 Экспорт в Excel</h2>
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label>Модель данных</label>
+    <select name="model" class="form-select" required>
+      <option value="Component">Компоненты</option>
+      <option value="User">Пользователи</option>
+      <option value="Build">Сборки</option>
+    </select>
+  </div>
+  <button type="submit" class="btn btn-success">📥 Скачать XLSX</button>
+  <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">← Назад</a>
+</form>
+{% endblock %}

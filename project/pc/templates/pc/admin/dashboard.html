@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Панель администратора</h1>
+  <span class="badge bg-success">{{ user.username }}</span>
+</div>
+
+<!-- Быстрые действия -->
+<div class="row mb-4">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header bg-success text-white">
+        <h5>📦 Компоненты</h5>
+      </div>
+      <div class="card-body">
+        <p>Всего: <strong>{{ stats.comps }}</strong></p>
+        <a href="{% url 'admin_add_component' %}" class="btn btn-outline-success w-100 mb-2">➕ Добавить</a>
+        <a href="{% url 'admin_export_xlsx' %}?model=Component" class="btn btn-success w-100">📤 Экспорт</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h5>👥 Пользователи</h5>
+      </div>
+      <div class="card-body">
+        <p>Всего: <strong>{{ stats.users }}</strong></p>
+        <a href="{% url 'admin_users' %}" class="btn btn-outline-primary w-100 mb-2">👁️ Просмотр</a>
+        <a href="{% url 'admin_export_xlsx' %}?model=User" class="btn btn-primary w-100">📤 Экспорт</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header bg-warning text-white">
+        <h5>🧩 Сборки</h5>
+      </div>
+      <div class="card-body">
+        <p>Всего: <strong>{{ stats.builds }}</strong></p>
+        <div class="small text-muted mb-2">
+          Средняя цена: {% widthratio stats.total_price stats.builds 1 %} ₽
+        </div>
+        <a href="{% url 'admin_export_xlsx' %}?model=Build" class="btn btn-warning w-100">📤 Экспорт всех</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Последние сборки -->
+<h3>🆕 Последние сборки</h3>
+<div class="list-group">
+{% for b in recent_builds %}
+  <div class="list-group-item">
+    <strong>{{ b.name }}</strong> — {{ b.user.username }} 
+    <span class="badge bg-success">{{ b.total_price }} ₽</span>
+    <small class="text-muted">{{ b.created_at|date:"d.m.Y H:i" }}</small>
+  </div>
+{% empty %}
+  <div class="list-group-item text-muted">Нет сборок</div>
+{% endfor %}
+</div>
+{% endblock %}

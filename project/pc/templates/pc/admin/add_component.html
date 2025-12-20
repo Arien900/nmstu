@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>➕ Добавить компонент</h2>
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label>Название</label>
+    <input name="name" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>Категория</label>
+    <select name="category" class="form-control" required>
+      <option value="CPU">CPU</option>
+      <option value="МП">Мат. плата</option>
+      <option value="ОЗУ">ОЗУ</option>
+      <option value="GPU">Видеокарта</option>
+      <option value="SSD">Накопитель</option>
+      <option value="БП">Блок питания</option>
+      <option value="Охлаждение">Охлаждение</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label>Цена (₽)</label>
+    <input type="number" name="price" class="form-control" value="0" min="0" required>
+  </div>
+  <div class="mb-3">
+    <label>Сокет (для CPU/МП)</label>
+    <input name="socket" class="form-control" placeholder="LGA1700, AM5...">
+  </div>
+  <div class="mb-3">
+    <label>Тип ОЗУ</label>
+    <select name="ram_type" class="form-control">
+      <option value="">—</option>
+      <option value="DDR4">DDR4</option>
+      <option value="DDR5">DDR5</option>
+    </select>
+  </div>
+  <div class="form-check mb-3">
+    <input type="checkbox" name="has_pcie" id="pcie" class="form-check-input">
+    <label for="pcie" class="form-check-label">Поддержка PCIe (для GPU)</label>
+  </div>
+  <button type="submit" class="btn btn-success">Сохранить</button>
+  <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">← Назад</a>
+</form>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>👥 Пользователи ({{ users.count }})</h2>
+<a href="{% url 'admin_dashboard' %}" class="btn btn-secondary mb-3">← Назад</a>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Логин</th>
+      <th>Роль</th>
+      <th>Email</th>
+      <th>Дата</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for u in users %}
+    <tr>
+      <td>{{ u.id }}</td>
+      <td>{{ u.username }}</td>
+      <td>
+        {% if u.role == 'admin' %}<span class="badge bg-danger">Админ</span>
+        {% elif u.role == 'user' %}<span class="badge bg-success">Пользователь</span>
+        {% else %}<span class="badge bg-secondary">Гость</span>{% endif %}
+      </td>
+      <td>{{ u.email|default:"—" }}</td>
+      <td>{{ u.date_joined|date:"d.m.Y" }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

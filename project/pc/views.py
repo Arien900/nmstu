@@ -1,190 +1,387 @@
-# pc/views.py
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
-from django.http import HttpResponse
-import openpyxl
 from .forms import CustomUserCreationForm
-from .models import Component, Build, BuildComponent, User, PresetBuild
+from .models import Component, Build, BuildComponent, User
+import openpyxl
+from django.http import HttpResponse
+from django.db import models
 
-
+# Главная страница
 def home_view(request):
-    components = Component.objects.all().order_by('category', 'name')
-    builds = []
-    if request.user.is_authenticated and request.user.role != 'guest':
-        builds = request.user.builds.all()
-    return render(request, 'pc/home.html', {
-        'components': components,
-        'builds': builds,
-        'user_role': request.user.role if request.user.is_authenticated else 'guest'
-    })
+    comps = Component.objects.all()
+    builds = request.user.builds.all() if request.user.is_authenticated else []
+    return render(request, 'pc/home.html', {'comps': comps, 'builds': builds})
 
 
-def register_view(request):
+# Регистрация
+def register(request):
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, "Регистрация прошла успешно!")
+            messages.success(request, "✅ Регистрация успешна!")
             return redirect('home')
     else:
         form = CustomUserCreationForm()
     return render(request, 'pc/register.html', {'form': form})
 
 
+# Вход
 def login_view(request):
     if request.method == "POST":
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                messages.success(request, f"Привет, {user.username}!")
-                return redirect('home')
-    else:
-        form = AuthenticationForm()
-    return render(request, 'pc/login.html', {'form': form})
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
+        if not username or not password:
+            messages.error(request, "❌ Укажите логин и пароль.")
+            return redirect('login')  # ← render → redirect
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            messages.success(request, f"✅ Добро пожаловать, {user.username}!")
+            return redirect('home')
+        messages.error(request, "❌ Неверный логин или пароль.")
+    return render(request, 'pc/login.html')
 
 
+# Выход
 def logout_view(request):
     logout(request)
-    messages.info(request, "Вы вышли.")
+    messages.info(request, "✅ Вы вышли.")
     return redirect('home')
 
 
+# Готовые сборки — ИСПРАВЛЕНО: 'Core i5', 'Ryzen 5'
 def presets_view(request):
-    presets = PresetBuild.objects.all()
-    return render(request, 'pc/presets.html', {'presets': presets})
+    presets_data = [
+        {
+            'name': '🎮 Игровая 2025',
+            'target': 'gaming',
+            'description': 'Для игр в 1440p',
+            'keywords': ['Core i5', 'B760', 'DDR5', 'RTX', '32ГБ', '980', 'RM850', 'AK620'],
+        },
+        {
+            'name': '💼 Офисная',
+            'target': 'office',
+            'description': 'Для Zoom и Excel',
+            'keywords': ['Ryzen 5', 'B650', 'DDR5', '970', 'MWE 550']
+        }
+    ]
+    
+    result = []
+    for preset in presets_data:
+        from django.db.models import Q
+        q = Q()
+        for kw in preset['keywords']:
+            q |= Q(name__icontains=kw)
+        components = Component.objects.filter(q)
+        total = sum(c.price for c in components)
+        result.append({
+            'preset': preset,
+            'components': components,  # ← единообразно 'components'
+            'total': total
+        })
+    return render(request, 'pc/presets.html', {'presets': result})
 
 
+# Использовать пресет
 @login_required
-def use_preset_view(request, preset_id):
-    preset = get_object_or_404(PresetBuild, id=preset_id)
-    components = preset.get_components()
-    if not components:
-        messages.error(request, "Нет компонентов для этой сборки. Добавьте их через админку.")
+def use_preset_view(request, pid):
+    presets = {
+        1: {'name': 'Игровая 2025', 'keywords': ['Core i5', 'B760', 'DDR5', 'RTX']},
+        2: {'name': 'Офисная', 'keywords': ['Ryzen 5', 'B650', 'DDR5']},
+    }
+    if pid not in presets:
+        messages.error(request, "❌ Пресет не найден.")
         return redirect('presets')
 
-    build = Build.objects.create(
-        user=request.user,
-        name=f"Моя {preset.name}",
-        total_price=sum(c.price for c in components)
-    )
-    for comp in components:
-        BuildComponent.objects.create(build=build, component=comp, quantity=1)
-    messages.success(request, f"Сборка «{build.name}» создана!")
-    return redirect('home')
+    from django.db.models import Q
+    q = Q()
+    for kw in presets[pid]['keywords']:
+        q |= Q(name__icontains=kw)
+    components = Component.objects.filter(q)
+
+    if not components:
+        messages.error(request, "⚠️ Нет подходящих компонентов.")
+        return redirect('presets')
+
+    try:
+        build = Build.objects.create(
+            user=request.user,
+            name=presets[pid]['name'],
+            total_price=sum(c.price for c in components)
+        )
+        for c in components:
+            BuildComponent.objects.create(build=build, component=c)
+        messages.success(request, f"✅ «{presets[pid]['name']}» создана!")
+        return redirect('build', build.id)
+    except:
+        messages.error(request, "❌ Сборка с таким именем уже есть.")
+        return redirect('presets')
 
 
+# Создать сборку — ИСПРАВЛЕНО: все render → redirect при ошибках
 @login_required
-def create_build_view(request):
+def create_build(request):
     if request.method == "POST":
         name = request.POST.get("name", "").strip()
-        component_ids = request.POST.getlist("components")
-        if not name:
-            messages.error(request, "Укажите название сборки.")
-            return render(request, 'pc/create_build.html', {
-                'components': Component.objects.all(),
-                'selected_ids': component_ids
-            })
+        ids = request.POST.getlist("components")
+        if not name or not ids:
+            messages.error(request, "❌ Укажите название и компоненты.")
+            return redirect('create_build')  # ← render → redirect
 
-        if not component_ids:
-            messages.error(request, "Выберите хотя бы один компонент.")
-            return render(request, 'pc/create_build.html', {
-                'components': Component.objects.all(),
-                'selected_ids': component_ids
-            })
+        try:
+            ids = [int(i) for i in ids]
+            selected = list(Component.objects.filter(id__in=ids))
+        except:
+            messages.error(request, "❌ Некорректные ID.")
+            return redirect('create_build')  # ← render → redirect
 
-        selected = Component.objects.filter(id__in=component_ids)
-        component_list = list(selected)
+        for i, c1 in enumerate(selected):
+            for c2 in selected[i+1:]:
+                if not c1.is_compatible_with(c2):
+                    messages.error(request, f"❌ {c1.name} несовместим с {c2.name}")
+                    return redirect('create_build')  # ← render → redirect
 
-        # Проверка совместимости
-        errors = []
-        for i, comp1 in enumerate(component_list):
-            for comp2 in component_list[i+1:]:
-                if not comp1.is_compatible_with(comp2):
-                    errors.append(f"❌ {comp1.name} несовместим с {comp2.name}")
-
-        if errors:
-            for err in errors:
-                messages.error(request, err)
-            return render(request, 'pc/create_build.html', {
-                'components': Component.objects.all(),
-                'selected_ids': component_ids
-            })
-
-        # Создаём сборку
-        build = Build.objects.create(user=request.user, name=name)
-        total = sum(comp.price for comp in component_list)
-        build.total_price = total
-        build.save()
-
-        for comp in component_list:
-            BuildComponent.objects.create(build=build, component=comp, quantity=1)
-
-        messages.success(request, f"Сборка «{name}» создана!")
-        return redirect('home')
+        try:
+            build = Build.objects.create(
+                user=request.user,
+                name=name,
+                total_price=sum(c.price for c in selected)
+            )
+            for c in selected:
+                BuildComponent.objects.create(build=build, component=c)
+            messages.success(request, f"✅ «{name}» создана!")
+            return redirect('build', build.id)
+        except:
+            messages.error(request, "❌ Сборка с таким именем уже есть.")
+            return redirect('create_build')  # ← render → redirect
 
     return render(request, 'pc/create_build.html', {
-        'components': Component.objects.all(),
+        'components': Component.objects.all()
     })
 
 
+# Детали сборки
+@login_required
+def build_detail(request, bid):
+    build = get_object_or_404(Build, id=bid, user=request.user)
+    components = build.components.select_related('component')
+    return render(request, 'pc/build_detail.html', {
+        'build': build,
+        'components': components
+    })
+
+
+# Проверка: админ?
 def is_admin(user):
     return user.is_authenticated and user.role == 'admin'
 
 
+# Админка
+@user_passes_test(is_admin)
+def admin_dashboard(request):
+    # Статистика
+    total_price = Build.objects.aggregate(total=models.Sum('total_price'))['total'] or 0
+    builds_count = Build.objects.count()
+    
+    stats = {
+        'users': User.objects.count(),
+        'comps': Component.objects.count(),
+        'builds': builds_count,
+        'total_price': total_price,
+        'avg_price': round(total_price / builds_count, 0) if builds_count else 0,
+    }
+
+    # Последние 5 сборок
+    recent_builds = Build.objects.select_related('user').order_by('-created_at')[:5]
+
+    return render(request, 'pc/admin/dashboard.html', {
+        'stats': stats,
+        'recent_builds': recent_builds,
+    })
+
+
+# Экспорт в XLSX
 @login_required
 @user_passes_test(is_admin)
-def export_view(request):
+def export_data(request):
     if request.method == "POST":
-        model_name = request.POST.get("model")
-        fields = request.POST.getlist("fields")
-
-        model_map = {
-            "Component": Component,
-            "Build": Build,
-            "BuildComponent": BuildComponent,
-            "User": User,
-            "PresetBuild": PresetBuild,
-        }
-        Model = model_map.get(model_name)
-        if not Model or not fields:
-            messages.error(request, "Выберите модель и поля.")
-            return redirect('export')
+        model_name = request.POST.get("model", "Component")
+        fields = request.POST.getlist("f") or ["id", "name", "price"]
+        Model = {"Component": Component, "Build": Build, "User": User}.get(model_name, Component)
 
         wb = openpyxl.Workbook()
         ws = wb.active
-        ws.title = model_name
         ws.append(fields)
-
         for obj in Model.objects.all():
-            row = []
-            for field in fields:
-                try:
-                    value = getattr(obj, field)
-                    if callable(value):
-                        value = value()
-                    row.append(str(value))
-                except AttributeError:
-                    row.append("")
-            ws.append(row)
+            ws.append([str(getattr(obj, f, "")) for f in fields])
 
-        response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        response["Content-Disposition"] = f'attachment; filename="{model_name}_export.xlsx"'
-        wb.save(response)
-        return response
+        res = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        res["Content-Disposition"] = f'attachment; filename="{model_name}.xlsx"'
+        wb.save(res)
+        return res
 
-    models_info = [
-        {"name": "Component", "fields": ["id", "name", "category", "price", "socket", "ram_type"]},
-        {"name": "Build", "fields": ["id", "name", "user", "total_price"]},
-        {"name": "BuildComponent", "fields": ["id", "build", "component", "quantity"]},
-        {"name": "User", "fields": ["id", "username", "email", "role"]},
-        {"name": "PresetBuild", "fields": ["id", "name", "target"]},
-    ]
-    return render(request, "pc/export.html", {"models": models_info})
+    return render(request, "pc/export.html", {"models": ["Component", "Build", "User"]})
+
+
+# Удаление сборки
+@login_required
+def delete_build_view(request, build_id):
+    build = get_object_or_404(Build, id=build_id, user=request.user)
+    if request.method == "POST":
+        build.delete()
+        messages.success(request, "🗑️ Сборка удалена.")
+        return redirect('home')
+    return redirect('build', build_id=build.id)
+
+@login_required
+def edit_build(request, bid):
+    build = get_object_or_404(Build, id=bid, user=request.user)
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        ids = request.POST.getlist("components")
+        if not name or not ids:
+            messages.error(request, "❌ Укажите название и компоненты.")
+            return redirect('edit_build', bid=bid)
+
+        try:
+            ids = [int(i) for i in ids]
+            selected = list(Component.objects.filter(id__in=ids))
+        except:
+            messages.error(request, "❌ Некорректные ID.")
+            return redirect('edit_build', bid=bid)
+
+        for i, c1 in enumerate(selected):
+            for c2 in selected[i+1:]:
+                if not c1.is_compatible_with(c2):
+                    messages.error(request, f"❌ {c1.name} несовместим с {c2.name}")
+                    return redirect('edit_build', bid=bid)
+
+        # Обновляем сборку
+        build.name = name
+        build.total_price = sum(c.price for c in selected)
+        build.save()
+
+        # Обновляем компоненты
+        build.components.all().delete()
+        for c in selected:
+            BuildComponent.objects.create(build=build, component=c)
+
+        messages.success(request, f"✅ «{name}» обновлена!")
+        return redirect('build', bid=build.id)
+
+    #показываем текущие компоненты
+    selected_ids = [bc.component.id for bc in build.components.all()]
+    return render(request, 'pc/create_build.html', {
+        'build': build,
+        'components': Component.objects.all(),
+        'selected_ids': selected_ids
+    })
+
+@login_required
+@user_passes_test(is_admin)
+def admin_add_component(request):
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        category = request.POST.get("category", "").strip()
+        price = request.POST.get("price", "0")
+        socket = request.POST.get("socket", "").strip()
+        ram_type = request.POST.get("ram_type", "").strip()
+        has_pcie = request.POST.get("has_pcie") == "on"
+
+        if not name or not category:
+            messages.error(request, "❌ Укажите название и категорию.")
+        else:
+            try:
+                Component.objects.create(
+                    name=name,
+                    category=category,
+                    price=int(price),
+                    socket=socket,
+                    ram_type=ram_type,
+                    has_pcie=has_pcie
+                )
+                messages.success(request, f"✅ «{name}» добавлен!")
+                return redirect('admin_dashboard')
+            except ValueError:
+                messages.error(request, "❌ Цена должна быть числом.")
+
+    return render(request, 'pc/admin/add_component.html')
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_users(request):
+    users = User.objects.all().order_by('-date_joined')
+    return render(request, 'pc/admin/users.html', {'users': users})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_export_xlsx(request):
+    if request.method != "POST":
+        return render(request, 'pc/admin/export.html')
+
+    model_name = request.POST.get("model")
+    Model = {
+        "Component": Component,
+        "User": User,
+        "Build": Build,
+    }.get(model_name)
+
+    if not Model:
+        messages.error(request, "❌ Неверная модель.")
+        return redirect('admin_export_xlsx')
+
+    # Формируем XLSX
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = model_name
+
+    # Заголовки
+    if model_name == "Component":
+        headers = ["ID", "Название", "Категория", "Цена", "Сокет", "Тип ОЗУ", "PCIe"]
+        ws.append(headers)
+        for obj in Model.objects.all():
+            ws.append([
+                obj.id,
+                obj.name,
+                obj.category,
+                obj.price,
+                obj.socket,
+                obj.ram_type,
+                "Да" if obj.has_pcie else "Нет"
+            ])
+    elif model_name == "User":
+        headers = ["ID", "Логин", "Роль", "Email", "Дата регистрации"]
+        ws.append(headers)
+        for obj in Model.objects.all():
+            ws.append([
+                obj.id,
+                obj.username,
+                obj.get_role_display(),
+                obj.email or "-",
+                obj.date_joined.strftime("%d.%m.%Y %H:%M")
+            ])
+    elif model_name == "Build":
+        headers = ["ID", "Пользователь", "Название", "Цена", "Компонентов", "Дата"]
+        ws.append(headers)
+        for obj in Model.objects.select_related('user').prefetch_related('components'):
+            comps = obj.components.count()
+            ws.append([
+                obj.id,
+                obj.user.username,
+                obj.name,
+                obj.total_price,
+                comps,
+                obj.created_at.strftime("%d.%m.%Y %H:%M")
+            ])
+
+    # Отправка
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response["Content-Disposition"] = f'attachment; filename="{model_name}_export.xlsx"'
+    wb.save(response)
+    return response

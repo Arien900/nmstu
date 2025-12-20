@@ -1,0 +1,45 @@
+<!-- pc/templates/pc/edit_preset.html -->
+{% extends 'base.html' %}
+{% block content %}
+<h2>✏️ Редактировать пресет: {{ preset.name }}</h2>
+
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label class="form-label">Название</label>
+    <input type="text" name="name" class="form-control" value="{{ preset.name }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Описание</label>
+    <textarea name="description" class="form-control">{{ preset.description }}</textarea>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Тип</label>
+    <select name="target" class="form-control">
+      <option value="gaming" {% if preset.target == 'gaming' %}selected{% endif %}>Игры</option>
+      <option value="office" {% if preset.target == 'office' %}selected{% endif %}>Офис</option>
+      <option value="budget" {% if preset.target == 'budget' %}selected{% endif %}>Бюджет</option>
+    </select>
+  </div>
+
+  <h4>Компоненты</h4>
+  <div class="row">
+  {% for comp in components %}
+    <div class="col-md-6 mb-2">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" 
+               name="components" value="{{ comp.name }}" 
+               id="comp_{{ forloop.counter }}" 
+               {% if comp.name in selected_names %}checked{% endif %}>
+        <label class="form-check-label" for="comp_{{ forloop.counter }}">
+          {{ comp.name }} — {{ comp.price }} ₽
+        </label>
+      </div>
+    </div>
+  {% endfor %}
+  </div>
+
+  <button type="submit" class="btn btn-success">💾 Сохранить пресет</button>
+  <a href="{% url 'presets' %}" class="btn btn-secondary">← Назад</a>
+</form>
+{% endblock %}

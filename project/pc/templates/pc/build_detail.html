@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-header bg-primary text-white">
+    <h3 class="mb-0">{{ build.name }}</h3>
+    <small>Создано: {{ build.created_at|date:"d.m.Y H:i" }}</small>
+  </div>
+  <div class="card-body">
+    <h4>Компоненты ({{ build.components.count }} шт.):</h4>
+    <ul class="list-group">
+{% for bc in components %}
+  <li class="list-group-item">
+    {{ bc.component.name }} × {{ bc.quantity }} — {{ bc.component.price }} ₽
+  </li>
+{% endfor %}
+    </ul>
+    <hr>
+    <h2 class="text-success text-center">{{ build.total_price }} ₽</h2>
+  </div>
+  <div class="card-footer text-center">
+    <a href="{% url 'create_build' %}" class="btn btn-outline-primary">✏️ Новая сборка</a>
+    <a href="{% url 'edit_build' build.id %}" class="btn btn-warning">✏️ Редактировать</a>
+    <form method="post" action="{% url 'delete_build' build.id %}" class="d-inline">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger" 
+              onclick="return confirm('Удалить «{{ build.name }}»?')">
+        🗑️ Удалить сборку
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

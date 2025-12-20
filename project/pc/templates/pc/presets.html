@@ -1,39 +1,50 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>🎯 Готовые сборки</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>🎯 Готовые сборки</h1>
+  <a href="{% url 'home' %}" class="btn btn-outline-secondary">← Назад</a>
+</div>
 
-<div class="row mt-4">
-{% for item in presets_data %}
-  {% with preset=item.preset components=item.components total=item.total_price %}
-  <div class="col-md-6 col-lg-4 mb-4">
+<div class="row g-4">
+{% for item in presets %}
+  <div class="col-md-6 col-lg-4">
     <div class="card h-100 shadow-sm">
-      <div class="card-header bg-{% if preset.target == 'gaming' %}success{% elif preset.target == 'budget' %}warning{% else %}info{% endif %} text-white">
-        <h4 class="mb-0">{{ preset.name }}</h4>
-        <small>{{ preset.get_target_display }}</small>
+      <div class="card-header bg-{% if item.preset.target == 'gaming' %}success{% else %}info{% endif %} text-white">
+        <h3 class="mb-0">{{ item.preset.name }}</h3>
+        <small>{{ item.preset.description }}</small>
       </div>
-      <div class="card-body">
-        <p>{{ preset.description }}</p>
-        <h5>Компоненты:</h5>
-        <ul class="list-unstyled">
-        {% for comp in components %}
-          <li>• {{ comp.name }} <span class="text-success float-end">{{ comp.price }} ₽</span></li>
+      <div class="card-body d-flex flex-column">
+        <h5>Компоненты ({{ item.components|length }} шт.):</h5>  <!-- ← БЫЛО 'comps' → СТАЛО 'components' -->
+        <ul class="list-unstyled flex-grow-1">
+        {% for c in item.components %}  <!-- ← БЫЛО 'comps' → СТАЛО 'components' -->
+          <li>• <strong>{{ c.name }}</strong> <span class="text-success float-end">{{ c.price }} ₽</span></li>
         {% empty %}
-          <li class="text-muted">Нет компонентов</li>
+          <li class="text-muted">Нет подходящих компонентов</li>
         {% endfor %}
         </ul>
         <hr>
-        <h4 class="text-center text-success">Итого: {{ total|floatformat:"0" }} ₽</h4>
+        <h2 class="text-center text-success mb-0">{{ item.total }} ₽</h2>
       </div>
       <div class="card-footer text-center">
-        {% if user.is_authenticated %}
-          <a href="{% url 'use_preset' preset.id %}" class="btn btn-primary">➕ Создать</a>
+        {% if item.components %}  <!-- ← comps → components -->
+          <a href="{% url 'use_preset' forloop.counter %}" class="btn btn-primary w-100">
+            ➕ Создать сборку
+          </a>
         {% else %}
-          <a href="{% url 'register' %}" class="btn btn-outline-primary">Зарегистрируйтесь</a>
+          <button class="btn btn-outline-secondary w-100" disabled>
+            Нет компонентов
+          </button>
         {% endif %}
       </div>
     </div>
   </div>
-  {% endwith %}
+{% empty %}
+  <div class="col-12">
+    <div class="alert alert-warning text-center">
+      <h3>📦 Нет готовых сборок</h3>
+      <p>Добавьте компоненты через админку.</p>
+    </div>
+  </div>
 {% endfor %}
 </div>
 {% endblock %}
