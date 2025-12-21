@@ -22,7 +22,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, "✅ Регистрация успешна!")
+            messages.success(request, "Регистрация успешна!")
             return redirect('home')
     else:
         form = CustomUserCreationForm()
@@ -35,25 +35,26 @@ def login_view(request):
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")
         if not username or not password:
-            messages.error(request, "❌ Укажите логин и пароль.")
-            return redirect('login')  # ← render → redirect
+            messages.error(request, "Укажите логин и пароль.")
+            return redirect('login')
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
-            messages.success(request, f"✅ Добро пожаловать, {user.username}!")
+            messages.success(request, f"Добро пожаловать, {user.username}!")
             return redirect('home')
-        messages.error(request, "❌ Неверный логин или пароль.")
+        messages.error(request, "Неверный логин или пароль.")
     return render(request, 'pc/login.html')
 
 
 # Выход
 def logout_view(request):
     logout(request)
-    messages.info(request, "✅ Вы вышли.")
+    messages.info(request, "Вы вышли.")
     return redirect('home')
 
 
-# Готовые сборки — ИСПРАВЛЕНО: 'Core i5', 'Ryzen 5'
+# Готовые сборки
+@login_required
 def presets_view(request):
     presets_data = [
         {
@@ -80,7 +81,7 @@ def presets_view(request):
         total = sum(c.price for c in components)
         result.append({
             'preset': preset,
-            'components': components,  # ← единообразно 'components'
+            'components': components,
             'total': total
         })
     return render(request, 'pc/presets.html', {'presets': result})
@@ -94,7 +95,7 @@ def use_preset_view(request, pid):
         2: {'name': 'Офисная', 'keywords': ['Ryzen 5', 'B650', 'DDR5']},
     }
     if pid not in presets:
-        messages.error(request, "❌ Пресет не найден.")
+        messages.error(request, "Пресет не найден.")
         return redirect('presets')
 
     from django.db.models import Q
@@ -104,7 +105,7 @@ def use_preset_view(request, pid):
     components = Component.objects.filter(q)
 
     if not components:
-        messages.error(request, "⚠️ Нет подходящих компонентов.")
+        messages.error(request, "Нет подходящих компонентов.")
         return redirect('presets')
 
     try:
@@ -115,22 +116,22 @@ def use_preset_view(request, pid):
         )
         for c in components:
             BuildComponent.objects.create(build=build, component=c)
-        messages.success(request, f"✅ «{presets[pid]['name']}» создана!")
+        messages.success(request, f"«{presets[pid]['name']}» создана!")
         return redirect('build', build.id)
     except:
         messages.error(request, "❌ Сборка с таким именем уже есть.")
         return redirect('presets')
 
 
-# Создать сборку — ИСПРАВЛЕНО: все render → redirect при ошибках
+# Создать сборку
 @login_required
 def create_build(request):
     if request.method == "POST":
         name = request.POST.get("name", "").strip()
         ids = request.POST.getlist("components")
         if not name or not ids:
-            messages.error(request, "❌ Укажите название и компоненты.")
-            return redirect('create_build')  # ← render → redirect
+            messages.error(request, "Укажите название и компоненты.")
+            return redirect('create_build') 
 
         try:
             ids = [int(i) for i in ids]
@@ -181,6 +182,7 @@ def is_admin(user):
 
 
 # Админка
+@login_required
 @user_passes_test(is_admin)
 def admin_dashboard(request):
     # Статистика
@@ -233,7 +235,7 @@ def delete_build_view(request, build_id):
     build = get_object_or_404(Build, id=build_id, user=request.user)
     if request.method == "POST":
         build.delete()
-        messages.success(request, "🗑️ Сборка удалена.")
+        messages.success(request, "Сборка удалена.")
         return redirect('home')
     return redirect('build', build_id=build.id)
 
@@ -244,14 +246,14 @@ def edit_build(request, bid):
         name = request.POST.get("name", "").strip()
         ids = request.POST.getlist("components")
         if not name or not ids:
-            messages.error(request, "❌ Укажите название и компоненты.")
+            messages.error(request, "Укажите название и компоненты.")
             return redirect('edit_build', bid=bid)
 
         try:
             ids = [int(i) for i in ids]
             selected = list(Component.objects.filter(id__in=ids))
         except:
-            messages.error(request, "❌ Некорректные ID.")
+            messages.error(request, "Некорректные ID.")
             return redirect('edit_build', bid=bid)
 
         for i, c1 in enumerate(selected):
@@ -270,7 +272,7 @@ def edit_build(request, bid):
         for c in selected:
             BuildComponent.objects.create(build=build, component=c)
 
-        messages.success(request, f"✅ «{name}» обновлена!")
+        messages.success(request, f"«{name}» обновлена!")
         return redirect('build', bid=build.id)
 
     #показываем текущие компоненты
@@ -293,7 +295,7 @@ def admin_add_component(request):
         has_pcie = request.POST.get("has_pcie") == "on"
 
         if not name or not category:
-            messages.error(request, "❌ Укажите название и категорию.")
+            messages.error(request, "Укажите название и категорию.")
         else:
             try:
                 Component.objects.create(
@@ -304,10 +306,10 @@ def admin_add_component(request):
                     ram_type=ram_type,
                     has_pcie=has_pcie
                 )
-                messages.success(request, f"✅ «{name}» добавлен!")
+                messages.success(request, f"«{name}» добавлен!")
                 return redirect('admin_dashboard')
             except ValueError:
-                messages.error(request, "❌ Цена должна быть числом.")
+                messages.error(request, "Цена должна быть числом.")
 
     return render(request, 'pc/admin/add_component.html')
 
@@ -333,7 +335,7 @@ def admin_export_xlsx(request):
     }.get(model_name)
 
     if not Model:
-        messages.error(request, "❌ Неверная модель.")
+        messages.error(request, "Неверная модель.")
         return redirect('admin_export_xlsx')
 
     # Формируем XLSX

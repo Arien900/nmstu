@@ -36,7 +36,9 @@ class Component(TimestampedModel):
     socket = models.CharField(max_length=50, blank=True)
     chipset = models.CharField(max_length=50, blank=True) 
     ram_type = models.CharField(max_length=10, blank=True)
-    has_pcie = models.BooleanField(default=False)           
+    has_pcie = models.BooleanField(default=False)
+    def __str__(self):
+        return f"{self.name} ({self.category})"           
 
     # Проверка совместимости
     def is_compatible_with(self, other):

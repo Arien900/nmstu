@@ -1,5 +1,6 @@
 import os
 from decouple import config
+import sys
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -12,6 +13,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.admin',
     'pc',  
 ]
 
@@ -55,3 +57,15 @@ DATABASES = {
 AUTH_USER_MODEL = 'pc.User'  
 LOGIN_REDIRECT_URL = '/login/'
 LOGIN_URL = '/login/'
+
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+
+class DisableMigrations:
+    def __contains__(self, item):
+        return True
+
+    def __getitem__(self, item):
+        return None
+
+if 'test' in sys.argv:
+    MIGRATION_MODULES = DisableMigrations()
